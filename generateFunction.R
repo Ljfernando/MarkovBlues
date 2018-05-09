@@ -151,8 +151,4 @@ generateMelody <- function(scheme = 3, n.iter = 100, logloss = "random", method 
     write.csv(gen, paste(csv_path, writeFile, sep = ""), row.names = FALSE)
   if(record)
     save.wave(out.wave, paste(wav_path, recordFile, sep = ""))
-  return(gen)
 }
-
-out <- generateMelody(writeFile = "testFunc.csv", recordFile = "testFunc.wav",
-                      logloss = "random")
