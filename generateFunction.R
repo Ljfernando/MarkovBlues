@@ -1,11 +1,10 @@
-setwd("~/Desktop/USFSpring2018/Stochastic_Processes/project/")
+
+# Change to the path where you saved this repo
+setwd("~/Desktop/DataScienceProjects/RProjects/MarkovBlues/")
 load("models.RData")
-library(audio)
-library(magrittr)
-library(dplyr)
 
 
-# Helper function
+# ~~~ Helper function ~~~
 # Converts frequency and duration values into a 
 # wave form to be recorded.
 makeSine <- function(freq, duration) {
@@ -18,6 +17,7 @@ makeSine <- function(freq, duration) {
   wave * c(fade, rep(1, length(wave) - 2 * length(fade)), rev(fade))
 }
 
+# ~~~ Helper function ~~~
 # Takes in a data frame created by the convertSeqToNotes()
 # function and creates a long numeric vector
 # to be converted into a wav file
@@ -43,29 +43,52 @@ createWave <- function(df){
   return(song_wave)
 }
 
-# Main function
-# Creates a melodic sequence specified by the given
-# argument parameters to be saved to a csv and
-# wave file if requested. Model scheme 1, 2, and 3 refer
-# to generating a sequence based on a full melody, separate 
-# sections, or repeated + separate sections respectively.
-# The logloss parameter determines the type of sequence you want
-# to generate. Min and max produce the sequence with the indicated
-# logloss. Random chooses any sequence (recommended). 
-# Options to write a csv and record a wav file of the sequence are 
-# given. 
+# ~~~~~~~~~~ MAIN FUNCTION ~~~~~~~~~~
+# Creates a melodic sequence simulating a 12-bar blues 
+# in csv and wav formats. 
 #
+#
+# Model Schemes:
+#   1 - PST built on the full melodies from our corpus of songs. 
+#       The output is a sequence that changes over time, without any
+#       underyling chord sections.
+#   2 - Six PSTs built on each of six sections of the 12-bar blues. No repetition
+#       occurs but each section assumes an underlying chord.
+#   3 - (default) Three PSTs built on each of six sections of the 12-bar blues. Section I 
+#       is repeated four times to produce I-I-IV-I-V-I. This simulates the 
+#       most realistic output.
+# 
 # args:
-#     scheme
-#     n.iter
-#     logloss
-#     method
-#     writeFile
-#     write
-#     recordFile
-#     record
+#     scheme - Model scheme (described above)
+#     n.iter - (default: 100) Number of random sequences first generated.
+#               Depending on the logloss parameter, one sequence is chosen.
+#     logloss - (default: random) Choice of how to choose a single sequence
+#               from the many sequences created by the n.iter argument.
+#               'min' and 'max' take sequences with loglosses respectively.
+#               Logloss is analogous to the likehood of a sequence occuring,
+#               however a low value is a higher likelihood and vice versa.
+#     method - (default: prob) Controls how individual sequences are generated. 
+#               As a PST is traversed, you can either choose the next symbol
+#               with the highest probability ('max') or keep it random based
+#               on their respective probabilities ('prob').
+#     writeFile - CSV file string to write out to. Must end with '.csv'
+#     write - logical parameter indicating whether or not to write to a csv
+#     recordFile - WAV file string to write out to. Must end with '.wav'
+#     record - logical parameter indicating whether or not to write to a wav
+#
+# returns:
+#     $df - The dataframe with the generated sequence. This would be written to your
+#           indicated csv file.
+#     $melody - A melody in the form of a large numeric vector. This would be written
+#           to your indicated wav file. You can call play(...$melody) to play
+#           the object straight through R.
 generateMelody <- function(scheme = 3, n.iter = 100, logloss = "random", method = "prob",
                            writeFile, write = TRUE, recordFile, record = TRUE){
+  
+  library(audio)
+  library(magrittr)
+  library(dplyr)
+  
   out.df <- data.frame(pitch = character(0),
                        mpitch = numeric(0),
                        value = character(0),
@@ -93,7 +116,7 @@ generateMelody <- function(scheme = 3, n.iter = 100, logloss = "random", method 
   }else if(scheme == 2){
     
     # 1. Create model for each section group
-    # 2. Generate 50 sequences for each model
+    # 2. Generate n.iter sequences for each model
     # 3. Grab the sequence with the lowest logloss
     # 4. Append to outputted dataframe
     # section sequence : Ia, Ib, IV, Ic, V, Id
@@ -142,6 +165,8 @@ generateMelody <- function(scheme = 3, n.iter = 100, logloss = "random", method 
       }
     }
   }
+  
+  # Large numeric vector containing melody
   out.wave <- createWave(gen)
   
   csv_path <- "generated_melodies/csv/"
@@ -151,4 +176,13 @@ generateMelody <- function(scheme = 3, n.iter = 100, logloss = "random", method 
     write.csv(gen, paste(csv_path, writeFile, sep = ""), row.names = FALSE)
   if(record)
     save.wave(out.wave, paste(wav_path, recordFile, sep = ""))
+  
+  return(list(df = gen,
+              melody = out.wave))
 }
+
+# Example calling function
+out <- generateMelody(write = FALSE, record = FALSE, logloss = 'min')
+
+# Playing melody in R
+play(out$melody)

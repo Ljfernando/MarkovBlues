@@ -3,11 +3,15 @@ title: "Markovian Blues"
 subtitle: "Analysis and Generation of 12-Bar Blues Melodies Using VLMCs"
 author: "Lance J. Fernando"
 date: "4/20/2018"
-output: html_document
+output: 
+  html_document:
+    toc: true # table of content true
+    number_sections: true  ## if you want number sections at each table header
+    theme: spacelab  # many options for theme, this one is my favorite.
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, messages=FALSE, warnings=FALSE)
+knitr::opts_chunk$set(echo=TRUE, messages=FALSE, warnings=FALSE, eval=FALSE)
 setwd("~/Desktop/USFSpring2018/Stochastic_Processes/project/")
 ```
 
@@ -20,7 +24,7 @@ library(reticulate)
 library(audio)
 ```
 
-
+# Song Preprocessing
 ```{r}
 # Transposes a vector of pitches to the key of
 # C. Accidentals will be denoted with flats 
@@ -300,7 +304,7 @@ convertSeqToNotes <- function(genSeq){
 ```
 
 
-# Writing Songs To CSV
+# Example Writing Songs To CSV
 Below is an example of writing *Creole Love Song* into CSV format. Notating this is obviously a tedious process and further examination into automating this would benefit this project greatly! This chunk of code will not be run as all the data was already created and stored in the */songs/* directory.
 ```{r writeSongs, eval=FALSE}
 title <- "Creole_Love_Song"
@@ -381,9 +385,11 @@ seq <- seqdef(melodies.mat, alphabet =alph, cpal = colors)
 
 # ~~~~ Fitting model ~~~~~
 # For generating
+# Change parameters for this to produce different models
 pst.g <- pstree(seq, L = 16, nmin=2, ymin=0)
 
 # For classification
+# Currently not being used
 pst.c <- pstree(seq, L = 16, nmin=2, ymin=0.001)
 pst.c <- prune(pst.c, gain="G1", C=1.2)
 
@@ -432,16 +438,18 @@ seq <- seqdef(mel_secs, alphabet = alph, cpal = colors)
 
 # ~~~~~ Fitting models ~~~~~
 # Generating model
+# Change parameters for this to produce different models
 sections.pst.g <- pstree(seq, L = 8, nmin = 2, ymin = 0.001, group = section)
 sections.pst.g <- prune(sections.pst.g, gain = "G1", C = 1.2)
 
 # Classification model
+# Currently not being used
 sections.pst.c <- pstree(seq, L = 8, nmin = 2, ymin = 0.001, group = section)
 sections.pst.c <- prune(sections.pst.c, gain = "G1", C = 1.2)
 
 ```
 
-Pairwise divergence assessment
+# Pairwise Divergence Assessment
 ```{r pairwiseDivergence}
 # Building models
 Ia.seq <- seqdef(Ia, alphabet = alph, cpal = colors)
@@ -495,6 +503,7 @@ ggplot(data = combos) +
 
 ```
 
+# Saving Workspace With Models
 ```{r saveModels}
 keep <- c("convertSeqToNotes", 'pst.g', 'pst.c', 'sections.pst.g', 'sections.pst.c')
 rm(list = setdiff(ls(), keep))
